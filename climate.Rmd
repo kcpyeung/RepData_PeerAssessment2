@@ -1,7 +1,6 @@
----
-title: "Studying the effect of natural diasters to population health and economic consequences"
-synopsis: "This study examines the NOAA storm database from 1950 to November 2011 to find out the type of event that has the most damaging effect to population health and economic consequences. Population health is measured by human fatalities and injuries. economic consequences are measured by property and crop damages."
----
+Studying the effect of natural diasters to population health and economic consequences
+==============================================================================================
+**synopsis**: "This study examines the NOAA storm database from 1950 to November 2011 to find out the type of event that has the most damaging effect to population health and economic consequences. Population health is measured by human fatalities and injuries. economic consequences are measured by property and crop damages."
 
 First, we download and read NOAA Storm Database at https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2
 
@@ -10,11 +9,12 @@ download.file("https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.
 csv <- read.csv(bzfile("download.csv.bz2"))
 ```
 
-To study effects to population health, we look at the fatality and injury data in the downloaded database.
+Damage to population health
+---------------------------
+To study effects of natural disasters to population health, we look at the fatality and injury data in the downloaded database.
 
 ```{r}
 pop_health <- csv[!is.na(csv$EVTYPE),c("EVTYPE", "FATALITIES", "INJURIES")]
-
 ```
 
 To provide a measure of population health damage, we weight fatality twice as heavily as injury. In other words, 2 injuries are counted as 1 fatality. We aggregate the event type and against population health damage below.
@@ -22,11 +22,33 @@ To provide a measure of population health damage, we weight fatality twice as he
 ```{r}
 population_damage <- aggregate(FATALITIES + 2 * INJURIES ~ EVTYPE, data=pop_health, FUN=sum)
 names(population_damage) <- c("event_type", "damage")
-most_damaging <- population_damage[population_damage$damage==max(population_damage$damage), "event_type"]
+most_damaging_to_population <- population_damage[population_damage$damage==max(population_damage$damage), "event_type"]
 ```
-The most damaging event type, in terms of population damage, is `r most_damaging`.
+The most damaging event type, in terms of population damage, is `r most_damaging_to_population`.
 
+Damage to property
+------------------
 
+Next, we examine the type of natural disasters that caused the most economic consequences, which are divided into property and crop damages.
 
+```{r}
+k1 <- csv[(csv$PROPDMGEXP == "K"),c("EVTYPE", "PROPDMG", "PROPDMGEXP", "CROPDMG", "CROPDMGEXP")]
+m1 <- csv[(csv$PROPDMGEXP == "M"),c("EVTYPE", "PROPDMG", "PROPDMGEXP", "CROPDMG", "CROPDMGEXP")]
+b1 <- csv[(csv$PROPDMGEXP == "B"),c("EVTYPE", "PROPDMG", "PROPDMGEXP", "CROPDMG", "CROPDMGEXP")]
+k2 <- csv[(csv$CROPDMGEXP == "K"),c("EVTYPE", "PROPDMG", "PROPDMGEXP", "CROPDMG", "CROPDMGEXP")]
+m2 <- csv[(csv$CROPDMGEXP == "M"),c("EVTYPE", "PROPDMG", "PROPDMGEXP", "CROPDMG", "CROPDMGEXP")]
+b2 <- csv[(csv$CROPDMGEXP == "B"),c("EVTYPE", "PROPDMG", "PROPDMGEXP", "CROPDMG", "CROPDMGEXP")]
+econ_damages <- rbind(k1,m1,b1,k2,m2,b2)
+econ_damages$PROPDMGEXP <- apply(econ_damages, 1, function(row) { if(row[3] == "K") { 1000; } else if (row[3] == "M") { 1000000; } else if (row[3] == "B") { 1000000000; } else { 1; }})
+econ_damages$CROPDMGEXP <- apply(econ_damages, 1, function(row) { if(row[5] == "K") { 1000; } else if (row[5] == "M") { 1000000; } else if (row[5] == "B") { 1000000000; } else { 1; }})
 
+econ_damages$prop <- apply(econ_damages, 1, function(row) { as.numeric(row[2]) * as.numeric(row[3]); })
+econ_damages$crop <- apply(econ_damages, 1, function(row) { as.numeric(row[4]) * as.numeric(row[5]); })
+
+total_damage_by_event <- aggregate(prop+crop ~ EVTYPE, data=econ_damages, FUN=sum)
+names(total_damage_by_event) <- c("event_type","damage")
+most_damaging <- total_damage_by_event[total_damage_by_event$damage==max(total_damage_by_event$damage),"event_type"]
+```
+
+The event type that has the greatest economic consequences is `r most_damaging`.
 
