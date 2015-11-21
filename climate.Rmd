@@ -1,7 +1,9 @@
 Studying the effect of natural diasters to population health and economic consequences
 ==============================================================================================
-**synopsis**: "This study examines the NOAA storm database from 1950 to November 2011 to find out the type of event that has the most damaging effect to population health and economic consequences. Population health is measured by human fatalities and injuries. economic consequences are measured by property and crop damages."
+**Synopsis**: "This study examines the NOAA storm database from 1950 to November 2011 to find out the type of event that has the most damaging effect to population health and economic consequences. Population health is measured by human fatalities and injuries. economic consequences are measured by property and crop damages."
 
+Data Processing
+---------------
 First, we download and read NOAA Storm Database at https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2
 
 ```{r}
@@ -9,8 +11,7 @@ download.file("https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.
 csv <- read.csv(bzfile("download.csv.bz2"))
 ```
 
-Damage to population health
----------------------------
+### Damage to population health
 To study effects of natural disasters to population health, we look at the fatality and injury data in the downloaded database.
 
 ```{r}
@@ -24,11 +25,8 @@ population_damage <- aggregate(FATALITIES + 2 * INJURIES ~ EVTYPE, data=pop_heal
 names(population_damage) <- c("event_type", "damage")
 most_damaging_to_population <- population_damage[population_damage$damage==max(population_damage$damage), "event_type"]
 ```
-The most damaging event type, in terms of population damage, is `r most_damaging_to_population`.
 
-Damage to property
-------------------
-
+###Damage to property
 Next, we examine the type of natural disasters that caused the most economic consequences, which are divided into property and crop damages.
 
 ```{r}
@@ -49,6 +47,10 @@ total_damage_by_event <- aggregate(prop+crop ~ EVTYPE, data=econ_damages, FUN=su
 names(total_damage_by_event) <- c("event_type","damage")
 most_damaging <- total_damage_by_event[total_damage_by_event$damage==max(total_damage_by_event$damage),"event_type"]
 ```
+
+Results
+-------
+The most damaging event type, in terms of population damage, is `r most_damaging_to_population`.
 
 The event type that has the greatest economic consequences is `r most_damaging`.
 
