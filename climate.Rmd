@@ -1,0 +1,32 @@
+---
+title: "Studying the effect of natural diasters to population health and economic consequences"
+synopsis: "This study examines the NOAA storm database from 1950 to November 2011 to find out the type of event that has the most damaging effect to population health and economic consequences. Population health is measured by human fatalities and injuries. economic consequences are measured by property and crop damages."
+---
+
+First, we download and read NOAA Storm Database at https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2
+
+```{r}
+download.file("https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2", "download.csv.bz2")
+csv <- read.csv(bzfile("download.csv.bz2"))
+```
+
+To study effects to population health, we look at the fatality and injury data in the downloaded database.
+
+```{r}
+pop_health <- csv[!is.na(csv$EVTYPE),c("EVTYPE", "FATALITIES", "INJURIES")]
+
+```
+
+To provide a measure of population health damage, we weight fatality twice as heavily as injury. In other words, 2 injuries are counted as 1 fatality. We aggregate the event type and against population health damage below.
+
+```{r}
+population_damage <- aggregate(FATALITIES + 2 * INJURIES ~ EVTYPE, data=pop_health, FUN=sum)
+names(population_damage) <- c("event_type", "damage")
+most_damaging <- population_damage[population_damage$damage==max(population_damage$damage), "event_type"]
+```
+The most damaging event type, in terms of population damage, is `r most_damaging`.
+
+
+
+
+
